@@ -5,12 +5,10 @@
 package gem
 
 import (
-	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
@@ -21,176 +19,136 @@ type project struct {
 }
 
 var (
-	contentType = []byte("Content-Type")
+	proj = project{Name: "foo"}
+	ch   = make(chan bool)
 )
 
-func TestContext(t *testing.T) {
+func TestContext_HTML(t *testing.T) {
+	var err error
+
 	router := NewRouter()
-	respHtml := "OK"
 	router.GET("/html", func(ctx *Context) {
-		ctx.HTML(fasthttp.StatusOK, respHtml)
-	})
-
-	invalidValue := make(chan bool)
-	p := project{Name: "GEM"}
-	respJson, err := json.Marshal(&p)
-	if err != nil {
-		t.Fatalf("json.Marshal error %s", err)
-	}
-
-	router.GET("/json", func(ctx *Context) {
-		ctx.JSON(fasthttp.StatusOK, p)
-	})
-	router.GET("/json2", func(ctx *Context) {
-		ctx.JSON(fasthttp.StatusOK, invalidValue)
-	})
-
-	jsonpCallback := []byte("callback")
-	var respJsonp []byte
-	respJsonp = append(respJsonp, jsonpCallback...)
-	respJsonp = append(respJsonp, "("...)
-	respJsonp = append(respJsonp, respJson...)
-	respJsonp = append(respJsonp, ")"...)
-
-	router.GET("/jsonp", func(ctx *Context) {
-		ctx.JSONP(fasthttp.StatusOK, p, jsonpCallback)
-	})
-
-	router.GET("/jsonp2", func(ctx *Context) {
-		ctx.JSONP(fasthttp.StatusOK, invalidValue, jsonpCallback)
-	})
-
-	router.GET("/xml", func(ctx *Context) {
-		ctx.XML(fasthttp.StatusOK, p, xml.Header)
-	})
-	router.GET("/xml2", func(ctx *Context) {
-		ctx.XML(fasthttp.StatusOK, invalidValue, xml.Header)
+		ctx.HTML(fasthttp.StatusOK, "foo")
 	})
 
 	srv := New("", router.Handler())
 
-	// HTML
-	test1 := tests.New(srv)
-	test1.Url = "/html"
-	test1.Timeout = time.Microsecond * 200
-	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
-		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes) {
-			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes)
-		}
-		if !bytes.Equal(resp.Body(), []byte(respHtml)) {
-			return fmt.Errorf("unexpected response got %q want %q", string(resp.Body()), respHtml)
-		}
-		return nil
+	test1 := tests.New(srv, "/html")
+	test1.Expect().Status(fasthttp.StatusOK).
+		Header(HeaderContentType, HeaderContentTypeHTML).
+		Body("foo")
+	if err = test1.Run(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestContext_IsAjax(t *testing.T) {
+	var isAjax bool
+	router := NewRouter()
+	router.GET("/", func(ctx *Context) {
+		isAjax = ctx.IsAjax()
 	})
+
+	srv := New("", router.Handler())
+
+	test := tests.New(srv)
+	test.Headers[HeaderXRequestedWith] = HeaderXMLHttpRequest
+	test.Expect().Status(fasthttp.StatusOK)
+	if err := test.Run(); err != nil {
+		t.Error(err)
+	}
+	if !isAjax {
+		t.Error("expected ctx.IsAjax is true, got false")
+	}
+}
+
+func TestContext_JSON(t *testing.T) {
+	respJson, err := json.Marshal(proj)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	router := NewRouter()
+	router.GET("/json", func(ctx *Context) {
+		ctx.JSON(fasthttp.StatusOK, proj)
+	})
+	router.GET("/json-error", func(ctx *Context) {
+		ctx.JSON(fasthttp.StatusOK, ch)
+	})
+
+	srv := New("", router.Handler())
+
+	test1 := tests.New(srv, "/json")
+	test1.Expect().Status(fasthttp.StatusOK).
+		Header(HeaderContentType, HeaderContentTypeJSON).
+		Body(string(respJson))
 	if err = test1.Run(); err != nil {
 		t.Error(err)
 	}
 
-	// JSON
-	test2 := tests.New(srv)
-	test2.Url = "/json"
-	test2.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
-		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes) {
-			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeJSONBytes)
-		}
-		if !bytes.Equal(resp.Body(), []byte(respJson)) {
-			return fmt.Errorf("unexpected response got %q want %q", string(resp.Body()), respJson)
-		}
-		return nil
-	})
+	test2 := tests.New(srv, "/json-error")
+	test2.Expect().Status(fasthttp.StatusInternalServerError)
 	if err = test2.Run(); err != nil {
 		t.Error(err)
 	}
+}
 
-	test3 := tests.New(srv)
-	test3.Url = "/json2"
-	test3.Expect().Status(fasthttp.StatusInternalServerError).Custom(func(resp fasthttp.Response) error {
-		return nil
+func TestContext_JSONP(t *testing.T) {
+	respJson, err := json.Marshal(proj)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	callback := []byte("callback")
+	var respJsonp []byte
+	respJsonp = append(respJsonp, callback...)
+	respJsonp = append(respJsonp, "("...)
+	respJsonp = append(respJsonp, respJson...)
+	respJsonp = append(respJsonp, ")"...)
+
+	router := NewRouter()
+	router.GET("/jsonp", func(ctx *Context) {
+		ctx.JSONP(fasthttp.StatusOK, proj, callback)
 	})
-	if err = test3.Run(); err != nil {
+	router.GET("/jsonp-error", func(ctx *Context) {
+		ctx.JSONP(fasthttp.StatusOK, ch, callback)
+	})
+
+	srv := New("", router.Handler())
+
+	test1 := tests.New(srv, "/jsonp")
+	test1.Expect().Status(fasthttp.StatusOK).
+		Header(HeaderContentType, HeaderContentTypeJSONP).
+		Body(string(respJsonp))
+	if err = test1.Run(); err != nil {
 		t.Error(err)
 	}
 
-	// JSONP
-	test4 := tests.New(srv)
-	test4.Url = "/jsonp"
-	test4.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
-		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes) {
-			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeJSONPBytes)
-		}
-		if !bytes.Equal(resp.Body(), []byte(respJsonp)) {
-			return fmt.Errorf("unexpected response got %q want %q", string(resp.Body()), respJsonp)
-		}
-		return nil
-	})
-	if err = test4.Run(); err != nil {
+	test2 := tests.New(srv, "/jsonp-error")
+	test2.Expect().Status(fasthttp.StatusInternalServerError)
+	if err = test2.Run(); err != nil {
 		t.Error(err)
 	}
+}
 
-	test5 := tests.New(srv)
-	test5.Url = "/jsonp2"
-	test5.Expect().Status(fasthttp.StatusInternalServerError).Custom(func(resp fasthttp.Response) error {
-		return nil
-	})
-	if err = test5.Run(); err != nil {
-		t.Error(err)
-	}
+func TestContext_Logger(t *testing.T) {
+	var equal bool
+	router := NewRouter()
 
-	// XML
-	test6 := tests.New(srv)
-	test6.Url = "/xml"
-	test6.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
-		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes) {
-			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeXMLBytes)
-		}
-		p2 := project{}
-		if err := xml.Unmarshal(resp.Body(), &p2); err != nil {
-			return fmt.Errorf("xml.Unmarshal error %s", err)
-		}
-		if p2.Name != p.Name {
-			return fmt.Errorf("unexpected project's name got %q want %q", p2.Name, p.Name)
-		}
-		return nil
-	})
-	if err = test6.Run(); err != nil {
-		t.Error(err)
-	}
+	srv := New("", router.Handler())
 
-	test7 := tests.New(srv)
-	test7.Url = "/xml2"
-	test7.Expect().Status(fasthttp.StatusInternalServerError).Custom(func(resp fasthttp.Response) error {
-		return nil
-	})
-	if err = test7.Run(); err != nil {
-		t.Error(err)
-	}
-
-	var handleErr error
 	router.GET("/", func(ctx *Context) {
-		if !ctx.IsAjax() {
-			handleErr = fmt.Errorf("expected c.IsAjax() = %t, got %t", true, ctx.IsAjax())
-			return
-		}
-
-		if srv.logger != ctx.Logger() {
-			handleErr = fmt.Errorf("unexpected logger")
-			return
-		}
-
-		if srv.sessionsStore != ctx.SessionsStore() {
-			handleErr = fmt.Errorf("unexpected sessions store")
-			return
-		}
+		equal = ctx.Logger() == srv.logger
 	})
 
-	test8 := tests.New(srv)
-	test8.Headers[HeaderXRequestedWith] = HeaderXMLHttpRequest
-	test8.Expect().Status(fasthttp.StatusOK)
-	if err = test8.Run(); err != nil {
+	test := tests.New(srv)
+	test.Headers[HeaderXRequestedWith] = HeaderXMLHttpRequest
+	test.Expect().Status(fasthttp.StatusOK)
+	if err := test.Run(); err != nil {
 		t.Error(err)
 	}
-	if handleErr != nil {
-		t.Error(handleErr)
+	if !equal {
+		t.Error("expected ctx.Logger() == srv.logger: true, got false")
 	}
 }
 
@@ -270,5 +228,63 @@ func TestContext_ParamInt(t *testing.T) {
 	}
 	if page != 0 {
 		t.Errorf("expected page: %d, got %d", 0, page)
+	}
+}
+
+func TestContext_SessionsStore(t *testing.T) {
+	var equal bool
+	router := NewRouter()
+
+	srv := New("", router.Handler())
+
+	router.GET("/", func(ctx *Context) {
+		equal = ctx.SessionsStore() == srv.sessionsStore
+	})
+
+	test := tests.New(srv)
+	test.Headers[HeaderXRequestedWith] = HeaderXMLHttpRequest
+	test.Expect().Status(fasthttp.StatusOK)
+	if err := test.Run(); err != nil {
+		t.Error(err)
+	}
+	if !equal {
+		t.Error("expected ctx.SessionsStore() == srv.sessionsStore: true, got false")
+	}
+}
+
+func TestContext_XML(t *testing.T) {
+	xmlBytes, err := xml.Marshal(proj)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	respXml := append([]byte{}, xml.Header...)
+	respXml = append(respXml, xmlBytes...)
+
+	router := NewRouter()
+	router.GET("/xml", func(ctx *Context) {
+		ctx.XML(fasthttp.StatusOK, proj, xml.Header)
+	})
+	router.GET("/xml-error", func(ctx *Context) {
+		ctx.XML(fasthttp.StatusOK, ch, xml.Header)
+	})
+
+	srv := New("", router.Handler())
+
+	// XML
+	test1 := tests.New(srv, "/xml")
+	test1.Expect().Status(fasthttp.StatusOK).
+		Header(HeaderContentType, HeaderContentTypeXML).
+		Body(string(respXml))
+	if err = test1.Run(); err != nil {
+		t.Error(err)
+	}
+
+	test2 := tests.New(srv, "/xml-error")
+	test2.Expect().Status(fasthttp.StatusInternalServerError).Custom(func(resp fasthttp.Response) error {
+		return nil
+	})
+	if err = test2.Run(); err != nil {
+		t.Error(err)
 	}
 }
