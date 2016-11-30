@@ -129,21 +129,21 @@ func New(addr string, handler HandlerFunc) *Server {
 	return srv
 }
 
-// Signal
+// Signal defines specific action to handle os.Signal.
 type Signal int8
 
 // Signals
 const (
-	_              = iota
+	SignalNil      = iota
 	SignalShutdown = iota
 	SignalRestart
 )
 
 func isSignal(sig Signal) bool {
-	return sig == SignalShutdown || sig == SignalRestart
+	return sig == SignalShutdown || sig == SignalRestart || sig == SignalNil
 }
 
-// Server
+// Server implements HTTP server.
 type Server struct {
 	server        *fasthttp.Server
 	addr          string
@@ -156,6 +156,7 @@ type Server struct {
 	sessionsStore sessions.Store
 }
 
+// SetSignal set specific action to handle os.Signal.
 func (srv *Server) SetSignal(sig1 os.Signal, sig2 Signal) error {
 	if !isSignal(sig2) {
 		return fmt.Errorf("unsupported signal: %v", sig2)
@@ -258,7 +259,7 @@ func (srv *Server) ListenAndServe() error {
 // handleSignals handle signals.
 func (srv *Server) handleSignals() {
 	var sig os.Signal
-	for sig, _ = range srv.signals {
+	for sig = range srv.signals {
 		signal.Notify(srv.sigChan, sig)
 	}
 
@@ -300,6 +301,7 @@ func (srv *Server) serve() error {
 	}
 }
 
+// ServeConn serve connection.
 func (srv *Server) ServeConn(conn net.Conn) (err error) {
 	srv.wg.Add(1)
 	defer func() {

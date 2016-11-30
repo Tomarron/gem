@@ -10,10 +10,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
-	"time"
 )
 
 type project struct {
