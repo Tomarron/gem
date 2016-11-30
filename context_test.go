@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
+	"time"
 )
 
 type project struct {
@@ -71,6 +72,7 @@ func TestContext(t *testing.T) {
 	// HTML
 	test1 := tests.New(srv)
 	test1.Url = "/html"
+	test1.Timeout = time.Microsecond * 200
 	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
 		if !bytes.Equal(resp.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes) {
 			return fmt.Errorf("unexpected Content-Type got %q want %q", resp.Header.PeekBytes(contentType), HeaderContentTypeHTMLBytes)

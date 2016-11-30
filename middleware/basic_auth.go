@@ -60,10 +60,8 @@ func NewBasicAuth(validator func(username, password string) bool) *BasicAuth {
 	}
 }
 
-// BasicAuth errors
-var (
-	BasicAuthErrEmptyAuthorization = errors.New("empty authorization")
-)
+// BasicAuthErrEmptyAuthorization
+var BasicAuthErrEmptyAuthorization = errors.New("empty authorization")
 
 // Handle implements Middleware's Handle function.
 func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {

@@ -315,6 +315,7 @@ func (r *Router) allowed(path, reqMethod string, ctx *Context) (allow string) {
 	return
 }
 
+// Handler returns HandlerFunc.
 func (r *Router) Handler() HandlerFunc {
 	var h Handler
 	h = HandlerFunc(r.handler)
@@ -332,7 +333,7 @@ func (r *Router) Handler() HandlerFunc {
 	}
 }
 
-// Handler handle incoming requests.
+// handler handle incoming requests.
 func (r *Router) handler(ctx *Context) {
 	path := Bytes2String(ctx.RequestCtx.URI().Path())
 	method := Bytes2String(ctx.RequestCtx.Request.Header.Method())

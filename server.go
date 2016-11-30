@@ -90,7 +90,7 @@ func initServersFdOffset() {
 var (
 	waitTimeout = time.Second * 15
 
-	waitTimeoutError = errors.New("timeout")
+	errWaitTimeout = errors.New("timeout")
 
 	logger = log.New(os.Stderr, log.Llongfile|log.LstdFlags, log.LevelAll)
 )
@@ -342,7 +342,7 @@ func (srv *Server) wait() error {
 
 	select {
 	case <-timeout.C:
-		return waitTimeoutError
+		return errWaitTimeout
 	case <-wait:
 		return nil
 	}

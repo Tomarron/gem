@@ -21,7 +21,7 @@ var (
 	}
 )
 
-// Cross-Origin Resource Sharing middleware.
+// CORS Cross-Origin Resource Sharing middleware.
 type CORS struct {
 	// Skipper defines a function to skip middleware.
 	Skipper Skipper
