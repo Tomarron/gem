@@ -13,9 +13,8 @@ go get github.com/go-gem/gem
 
 ## Features
 
-- Graceful shutdown and restart
-- Listen multiple ports at single process
-- Leveled logger
+- Graceful shutdown/restart/upgrade
+- Leveled logging
 - High-performance and pretty router, very friendly to RESTful APIs
 - Sessions support
 - Various Middlewares:
@@ -30,16 +29,18 @@ go get github.com/go-gem/gem
 
 ![Gem benchmark](benchmark.png)
 
-| :---------|:-------------------------------------------------|
+| Parameter |                       INFO                       |
+|:----------|:-------------------------------------------------|
 | Date      | 2016-11-01                                       |
-| Version   | 1.7.1                                            |
+| Go Version| 1.7.1                                            |
+| OS        | Ubuntu 16.04.1 LTS                               |
 | CPU       | Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz 8 Cores|
 | Memory    | 8G                                               |
 
 The benchmark was tested at my laptop, I will send a pull request to 
 [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) when the first stable version is released.
 
-## Example
+## Usages
 
 #### Quick Start
 
@@ -47,9 +48,9 @@ The benchmark was tested at my laptop, I will send a pull request to
 package main
 
 import (
-	"log"
-
-	"github.com/go-gem/gem"
+    "log"
+    
+    "github.com/go-gem/gem"
 )
 
 func main() {
@@ -62,6 +63,63 @@ func main() {
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
 
 #### Router
+
+The Router's APIs is similar to httprouter and fasthttprouter.
+
+```
+func main() {
+    router := gem.NewRouter()
+    
+    router.GET("/user/:name", func(ctx *gem.Contexy){
+        ctx.HTML(200, fmt.Sprintf("Hello %s", ctx.Param("name")))
+    })
+    
+	log.Fatal(gem.ListenAndServe(":8080", router.Handler()))
+}
+```
+
+#### Leveled logging
+
+Gem defines a [Logger](https://godoc.org/github.com/go-gem/gem#Logger) interface, 
+so it is easy to custom logger.
+
+AFAIK, the following logging packages is compatible with Gem:
+
+- [gem log](https://github.com/go-gem/log) - a simple and leveled logging package, maintained by Gem.
+- [logrus](https://github.com/sirupsen/logrus) - structured, pluggable logging package.
+
+For example:
+
+```
+package main
+
+import (
+	"log"
+
+	"github.com/go-gem/gem"
+	"github.com/Sirupsen/logrus"
+)
+
+func main() {
+	logger := logrus.New()
+
+	srv := gem.New(":8080", func(ctx *gem.Context) {
+		ctx.Logger().Println("1")
+		ctx.Logger().Infoln("2")
+		ctx.Logger().Warningln("3")
+		ctx.Logger().Errorln("4")
+		ctx.HTML(200, "Hello world.")
+	})
+
+	srv.SetLogger(logger)
+
+	log.Fatal(srv.ListenAndServe())
+}
+```
+
+#### Graceful shutdown/restart/upgrade
+
+Undetermined
 
 
 ## Semantic Versioning
