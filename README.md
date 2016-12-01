@@ -30,13 +30,18 @@ go get github.com/go-gem/gem
 
 ![Gem benchmark](benchmark.png)
 
-I have sent a pull request, waiting for merging and rerunning the benchmark, 
-see [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) for more information.
+| :---------|:-------------------------------------------------|
+| Date      | 2016-11-01                                       |
+| Version   | 1.7.1                                            |
+| CPU       | Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz 8 Cores|
+| Memory    | 8G                                               |
 
+The benchmark was tested at my laptop, I will send a pull request to 
+[go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) when the first stable version is released.
 
 ## Example
 
-##### Quick Start
+#### Quick Start
 
 ```
 package main
@@ -48,15 +53,15 @@ import (
 )
 
 func main() {
-	log.Fatal(gem.ListenAndServe(":8080", func(c *gem.Context) {
-        c.HTML(200, "Hello world.")
+	log.Fatal(gem.ListenAndServe(":8080", func(ctx *gem.Context) {
+        ctx.HTML(200, "Hello world.")
     }))
 }
 ```
 
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
 
-##### Router
+#### Router
 
 
 ## Semantic Versioning
