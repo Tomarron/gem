@@ -26,7 +26,7 @@ const (
 	name = "Gem"
 
 	// Gem version
-	version = "v1.0.0-alpha"
+	version = "1.0.0-alpha"
 )
 
 // Name returns name.
@@ -398,7 +398,7 @@ func fork() (err error) {
 		os.Environ(),
 		"GEM_GRACEFUL_RESTART=true",
 	)
-	if len(servers) > 1 {
+	if len(addrs) > 0 {
 		env = append(env, fmt.Sprintf(`GEM_SERVER_ADDRS=%s`, strings.Join(addrs, ",")))
 	}
 
