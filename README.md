@@ -60,7 +60,13 @@ func main() {
 
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
 
-## Wiki
+## [Examples](https://github.com/go-gem/examples)
+
+- [**Graceful shutdown and restart**](https://github.com/go-gem/examples/tree/master/graceful)
+- [**Leveled logging**](https://github.com/go-gem/examples/tree/master/logger)
+
+
+## [Wiki](https://github.com/go-gem/gem/wiki)
 
 - [Router](https://github.com/go-gem/gem/wiki/Router)
 
