@@ -727,9 +727,8 @@ func TestRouterServeFiles(t *testing.T) {
 
 	var err error
 
-	test1 := tests.New(srv)
-	test1.Url = "/favicon.ico"
-	test1.Timeout = 500 * time.Millisecond
+	test1 := tests.New(srv, "/favicon.ico")
+	test1.Timeout = time.Second
 	test1.Expect().Status(fasthttp.StatusOK).Custom(func(resp fasthttp.Response) error {
 		if !bytes.Equal(resp.Body(), body) {
 			t.Fatalf("Unexpected body %q. Expected %q", resp.Body(), body)
