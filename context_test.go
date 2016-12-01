@@ -9,10 +9,15 @@ import (
 	"encoding/xml"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
+
+func init() {
+	tests.DefaultTimeout = 500 * time.Microsecond
+}
 
 type project struct {
 	Name string `json:"name" xml:"name"`

@@ -8,11 +8,16 @@ import (
 	"encoding/base64"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/go-gem/gem"
 	"github.com/go-gem/tests"
 	"github.com/valyala/fasthttp"
 )
+
+func init() {
+	tests.DefaultTimeout = 500 * time.Microsecond
+}
 
 func TestBasicAuth(t *testing.T) {
 	trueUsername := "foo"
