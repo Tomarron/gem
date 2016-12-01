@@ -47,29 +47,42 @@ func TestServer_SetSessionsStoret(t *testing.T) {
 }
 
 func TestServer_SetSignal(t *testing.T) {
+	var err error
 	var signals = map[os.Signal]Signal{
-		syscall.SIGHUP:  SignalRestart,
-		syscall.SIGUSR1: SignalRestart,
-		syscall.SIGTERM: SignalShutdown,
-		syscall.SIGUSR2: SignalRestart,
-	}
-
-	srv := New("", emptyHandler)
-
-	for sig1, sig2 := range signals {
-		srv.SetSignal(sig1, sig2)
+		syscall.SIGHUP:  SigRestart,
+		syscall.SIGUSR1: SigRestart,
+		syscall.SIGUSR2: SigShutdown,
 	}
 
 	for sig1, sig2 := range signals {
-		if srv.signals[sig1] != sig2 {
-			t.Errorf("expected signal %+v, got %+v", sig2, srv.signals[sig1])
+		if err = SetSignal(sig1, sig2); err != nil {
+			t.Fatal(err)
+		}
+
+	}
+
+	for sig1, sig2 := range signals {
+		if signals[sig1] != sig2 {
+			t.Errorf("expected signal %+v, got %+v", sig2, signals[sig1])
 		}
 	}
 
+	// ignore syscall.SIGUSR2
+	if err = SetSignal(syscall.SIGUSR2, SigIgnore); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := signals[syscall.SIGUSR2]; !ok {
+		t.Error("failed to ignore signal")
+	}
+
 	// invalid signal
-	err := srv.SetSignal(syscall.SIGINT, -1)
-	expectedErr := fmt.Sprintf("unsupported signal: %v", -1)
-	if err == nil || err.Error() != expectedErr {
+	expectedErr := fmt.Sprintf("invalid signal: %v", -1)
+	if err = SetSignal(syscall.SIGINT, -1); err == nil || err.Error() != expectedErr {
+		t.Errorf("excepted error: %q, got %q", expectedErr, err)
+	}
+
+	expectedErr = fmt.Sprintf("the signal %s is not allow to custom", syscall.SIGTERM)
+	if err = SetSignal(syscall.SIGTERM, SigRestart); err == nil || err.Error() != expectedErr {
 		t.Errorf("excepted error: %q, got %q", expectedErr, err)
 	}
 }
@@ -108,6 +121,7 @@ func TestServer_LoadConfig(t *testing.T) {
 
 	config := &ServerConfig{
 		Name:                 "fasthttp",
+		WaitTimeout:          time.Second * 30,
 		Concurrency:          10000,
 		DisableKeepalive:     true,
 		ReadBufferSize:       1024,
@@ -127,6 +141,9 @@ func TestServer_LoadConfig(t *testing.T) {
 
 	if srv.server.Name != config.Name {
 		t.Errorf("expected server Name %v, got %v", config.Name, srv.server.Name)
+	}
+	if srv.waitTimeout != config.WaitTimeout {
+		t.Errorf("expected server WaitTimeout %v, got %v", config.WaitTimeout, srv.waitTimeout)
 	}
 	if srv.server.Concurrency != config.Concurrency {
 		t.Errorf("expected server Concurrency %v, got %v", config.Concurrency, srv.server.Concurrency)

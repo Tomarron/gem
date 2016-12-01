@@ -26,7 +26,7 @@ const (
 	name = "Gem"
 
 	// Gem version
-	version = "1.0.0-alpha"
+	version = "1.0.0-beta"
 )
 
 // Name returns name.
@@ -51,6 +51,8 @@ var (
 
 	servers map[string]*Server
 
+	signals map[os.Signal]Signal
+
 	isGracefulRestart bool
 
 	isForked bool
@@ -70,12 +72,52 @@ func init() {
 
 	servers = make(map[string]*Server)
 
+	signals = map[os.Signal]Signal{
+		syscall.SIGHUP:  SigRestart,
+		syscall.SIGTERM: SigShutdown,
+	}
+
 	isGracefulRestart = os.Getenv("GEM_GRACEFUL_RESTART") == "true"
 
 	serversAddr = make([]string, 0)
 	serversFdOffset = make(map[string]uint)
 
 	initServersFdOffset()
+}
+
+// Signal defines specific action to handle os.Signal.
+type Signal int8
+
+// Signals
+const (
+	SigIgnore = iota
+	SigRestart
+	SigShutdown
+)
+
+func isSignal(sig Signal) bool {
+	return sig == SigIgnore || sig == SigRestart || sig == SigShutdown
+}
+
+// SetSignal set os.Signal's action(shutdown/restart/ignore).
+//
+// Note: it is no allow to set syscall.SIGTERM.
+func SetSignal(sig1 os.Signal, sig2 Signal) error {
+	if sig1 == syscall.SIGTERM {
+		return fmt.Errorf("the signal %s is not allow to custom", sig1)
+	}
+
+	if !isSignal(sig2) {
+		return fmt.Errorf("invalid signal: %v", sig2)
+	}
+
+	if sig2 == SigIgnore {
+		delete(signals, sig1)
+	} else {
+		signals[sig1] = sig2
+	}
+
+	return nil
 }
 
 func initServersFdOffset() {
@@ -88,11 +130,11 @@ func initServersFdOffset() {
 }
 
 var (
-	waitTimeout = time.Second * 15
+	defaultWaitTimeout = time.Second * 15
 
 	errWaitTimeout = errors.New("timeout")
 
-	logger = log.New(os.Stderr, log.Llongfile|log.LstdFlags, log.LevelAll)
+	defaultLogger = log.New(os.Stderr, log.Llongfile|log.LstdFlags, log.LevelAll)
 )
 
 // New returns a Server instance with default setting.
@@ -111,36 +153,17 @@ func New(addr string, handler HandlerFunc) *Server {
 		server: &fasthttp.Server{
 			Name: serverName(),
 		},
-		wg:      &sync.WaitGroup{},
-		sigChan: make(chan os.Signal),
-		signals: map[os.Signal]Signal{
-			syscall.SIGHUP:  SignalRestart,
-			syscall.SIGTERM: SignalShutdown,
-		},
-		logger:      logger,
-		waitTimeout: waitTimeout,
+		wg:          &sync.WaitGroup{},
+		sigChan:     make(chan os.Signal),
+		logger:      defaultLogger,
+		waitTimeout: defaultWaitTimeout,
 	}
 
-	// Initialize handler.
 	srv.init(handler)
 
 	servers[addr] = srv
 
 	return srv
-}
-
-// Signal defines specific action to handle os.Signal.
-type Signal int8
-
-// Signals
-const (
-	SignalNil      = iota
-	SignalShutdown = iota
-	SignalRestart
-)
-
-func isSignal(sig Signal) bool {
-	return sig == SignalShutdown || sig == SignalRestart || sig == SignalNil
 }
 
 // Server implements HTTP server.
@@ -150,20 +173,9 @@ type Server struct {
 	listener      net.Listener
 	wg            *sync.WaitGroup
 	sigChan       chan os.Signal
-	signals       map[os.Signal]Signal
 	waitTimeout   time.Duration
 	logger        Logger
 	sessionsStore sessions.Store
-}
-
-// SetSignal set specific action to handle os.Signal.
-func (srv *Server) SetSignal(sig1 os.Signal, sig2 Signal) error {
-	if !isSignal(sig2) {
-		return fmt.Errorf("unsupported signal: %v", sig2)
-	}
-
-	srv.signals[sig1] = sig2
-	return nil
 }
 
 // SetLogger set logger.
@@ -259,34 +271,34 @@ func (srv *Server) ListenAndServe() error {
 // handleSignals handle signals.
 func (srv *Server) handleSignals() {
 	var sig os.Signal
-	for sig = range srv.signals {
+	for sig = range signals {
 		signal.Notify(srv.sigChan, sig)
 	}
 
 	pid := syscall.Getpid()
 	for {
 		sig = <-srv.sigChan
-		switch srv.signals[sig] {
-		case SignalRestart:
+		log.Printf("[%d] received signal %q.\n", pid, sig)
+		switch signals[sig] {
+		case SigRestart:
 			err := fork()
 			if err != nil {
 				log.Printf("[%d] Fork err: %s", pid, err)
 			}
 			srv.stop()
-		case SignalShutdown:
+		case SigShutdown:
+			log.Printf("[%d] shutting down the server(%s)...\n", pid, srv.addr)
 			if err := srv.wait(); err != nil {
 				log.Printf(
-					"[%d] Server(%s) has been shutdown, but some exsiting connctions reach error: %s.\n",
+					"[%d] server(%s) has been shutdown, but some exsiting connctions reach error: %s.\n",
 					pid, srv.addr, err,
 				)
 			} else {
-				log.Printf("[%d] Server(%s) shutdown successfully.\n", pid, srv.addr)
+				log.Printf("[%d] server(%s) shutdown successfully.\n", pid, srv.addr)
 			}
 			serversWg.Done()
 			shutdown()
 			return
-		default:
-			log.Printf("[%d] Received %v.\n", pid, sig)
 		}
 	}
 }
@@ -361,7 +373,7 @@ func shutdown() {
 
 	serversWg.Wait()
 
-	log.Printf("[%d] All of old servers have been shutdown successfully.\n", os.Getpid())
+	log.Printf("[%d] all of old servers have been shutdown successfully.\n", os.Getpid())
 
 	os.Exit(0)
 }
@@ -376,7 +388,7 @@ func fork() (err error) {
 	mutex.Unlock()
 
 	pid := syscall.Getpid()
-	log.Printf("[%d] Forking...\n", pid)
+	log.Printf("[%d] Restarting...\n", pid)
 
 	files := make([]uintptr, len(servers)+3)
 	files = append(files, os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd())
@@ -497,6 +509,9 @@ type ServerConfig struct {
 	// Default server name is used if left blank.
 	Name string `json:"name"`
 
+	// Duration for existing connections to finish.
+	WaitTimeout time.Duration `json:"write_timeout"`
+
 	// The maximum number of concurrent connections the server may serve.
 	//
 	// DefaultConcurrency is used if not set.
@@ -611,6 +626,9 @@ type ServerConfig struct {
 func (srv *Server) LoadConfig(config *ServerConfig) {
 	if config.Name != "" {
 		srv.server.Name = config.Name
+	}
+	if config.WaitTimeout > 0 {
+		srv.waitTimeout = config.WaitTimeout
 	}
 	if config.Concurrency > 0 {
 		srv.server.Concurrency = config.Concurrency

@@ -13,8 +13,8 @@ go get github.com/go-gem/gem
 
 ## Features
 
-- Graceful shutdown and restart
-- Leveled logging
+- [Graceful shutdown and restart](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart)
+- [Leveled logging](https://github.com/go-gem/gem/wiki/Logger)
 - High-performance and pretty router, very friendly to RESTful APIs
 - Sessions support
 - Various Middlewares:
