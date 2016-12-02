@@ -26,6 +26,8 @@ go get github.com/go-gem/gem
     - Request Body Limit middleware
     - CSRF middleware
     - CORS middleware
+- [Not bad scores of test coverage](https://coveralls.io/github/go-gem/gem?branch=master) - 85%～100% is acceptable.
+
 
 ## Performance
 
@@ -41,6 +43,7 @@ go get github.com/go-gem/gem
 
 The benchmark comes from my laptop, I will send a pull request to 
 [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) when the first stable version was released.
+
 
 ## Quick Start
 
@@ -62,21 +65,36 @@ func main() {
 
 Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
 
-## [Examples](https://github.com/go-gem/examples)
-
-- [**Graceful shutdown and restart**](https://github.com/go-gem/examples/tree/master/graceful)
-- [**Leveled logging**](https://github.com/go-gem/examples/tree/master/logger)
-
 
 ## [Wiki](https://github.com/go-gem/gem/wiki)
 
+- [Server](https://github.com/go-gem/gem/wiki/Server)
+
+- [Context](https://github.com/go-gem/gem/wiki/Context)
+    - [Example](https://github.com/go-gem/examples/tree/master/context)
+
 - [Router](https://github.com/go-gem/gem/wiki/Router)
+    - [Example](https://github.com/go-gem/examples/tree/master/router)
 
 - [Logger](https://github.com/go-gem/gem/wiki/Logger)
+    - [Custom logger](https://github.com/go-gem/gem/wiki/Logger#custom-logger)
+    - [Example](https://github.com/go-gem/examples/tree/master/logger)
 
 - [Graceful shutdown and restart](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart)
+    - [Custom signal actions](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart#custom-signal-actions)
+    - [Example](https://github.com/go-gem/examples/tree/master/graceful)
 
 - [Middleware](https://github.com/go-gem/gem/wiki/Middleware)
+    - [How to write a middleware?](https://github.com/go-gem/gem/wiki/Middleware#how-to-write-a-middleware)
+    - [Share data between middlewares](https://github.com/go-gem/gem/wiki/Middleware#share-data-between-middlewares)
+
+
+## [Examples](https://github.com/go-gem/examples)
+
+- [**Context**](https://github.com/go-gem/examples/tree/master/context)
+- [**Router**](https://github.com/go-gem/examples/tree/master/router)
+- [**Leveled logging**](https://github.com/go-gem/examples/tree/master/logger)
+- [**Graceful shutdown and restart**](https://github.com/go-gem/examples/tree/master/graceful)
 
 
 ## Semantic Versioning
@@ -116,7 +134,7 @@ Just for figuring out the web framework's workflow, and try to design a simple a
 
 1. What should I pay attention to?
 
-    **At present**, Gem is incompatible with some APIs of fasthttp, the incompatible APIs following:
+    At present, Gem is incompatible with some APIs of fasthttp, the incompatible APIs following:
     
     - **fasthttp.TimeoutHandler**
 
@@ -136,8 +154,7 @@ Just for figuring out the web framework's workflow, and try to design a simple a
     
     **Disadvantages**: 
     
-    at present, Gem dose not provide APIs to Serve the custom `Listener` like `fasthttp.Serve`,
-    but that will not be a problem, We will add support for this feature in the future.
+    At present, Gem dose not provide APIs to Serve the custom `Listener` like `fasthttp.Serve`.
 
 
 ## LICENSE

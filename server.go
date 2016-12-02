@@ -85,7 +85,7 @@ func init() {
 	initServersFdOffset()
 }
 
-// Signal defines specific action to handle os.Signal.
+// SignalAction defines specific action to handle os.Signal.
 type SignalAction int8
 
 // Signal actions
