@@ -2,8 +2,6 @@
 
 Gem, a simple and fast web framework, it built top of [fasthttp](https://github.com/valyala/fasthttp).
 
-#### The API is currently unstable until the version `v1.0.0` being released, see [milestones](https://github.com/go-gem/gem/milestones) for more details.
-
 ## Install
 
 ```
@@ -69,21 +67,17 @@ Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080)
 ## [Wiki](https://github.com/go-gem/gem/wiki)
 
 - [Server](https://github.com/go-gem/gem/wiki/Server)
-
+    - [Configuration](https://github.com/go-gem/gem/wiki/Server#configuration)
 - [Context](https://github.com/go-gem/gem/wiki/Context)
     - [Example](https://github.com/go-gem/examples/tree/master/context)
-
 - [Router](https://github.com/go-gem/gem/wiki/Router)
     - [Example](https://github.com/go-gem/examples/tree/master/router)
-
 - [Logger](https://github.com/go-gem/gem/wiki/Logger)
     - [Custom logger](https://github.com/go-gem/gem/wiki/Logger#custom-logger)
     - [Example](https://github.com/go-gem/examples/tree/master/logger)
-
 - [Graceful shutdown and restart](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart)
     - [Custom signal actions](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart#custom-signal-actions)
     - [Example](https://github.com/go-gem/examples/tree/master/graceful)
-
 - [Middleware](https://github.com/go-gem/gem/wiki/Middleware)
     - [How to write a middleware?](https://github.com/go-gem/gem/wiki/Middleware#how-to-write-a-middleware)
     - [Share data between middlewares](https://github.com/go-gem/gem/wiki/Middleware#share-data-between-middlewares)
