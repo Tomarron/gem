@@ -2,6 +2,7 @@
 
 Gem, a simple and fast web framework, it built top of [fasthttp](https://github.com/valyala/fasthttp).
 
+
 ## Install
 
 ```
@@ -39,8 +40,9 @@ go get github.com/go-gem/gem
 | CPU       | Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz 8 Cores|
 | Memory    | 8G                                               |
 
-The benchmark comes from my laptop, I will send a pull request to 
-[go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) when the first stable version was released.
+The benchmark comes from my laptop, I have send a pull request to 
+[go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark),
+waiting for merging and rerunning the benchmark.
 
 
 ## Quick Start
