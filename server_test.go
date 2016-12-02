@@ -46,7 +46,7 @@ func TestServer_SetSessionsStoret(t *testing.T) {
 	}
 }
 
-func TestServer_SetSignal(t *testing.T) {
+func TestServer_SetSignalAction(t *testing.T) {
 	var err error
 	var signals = map[os.Signal]SignalAction{
 		syscall.SIGHUP:  SigRestart,
@@ -55,7 +55,7 @@ func TestServer_SetSignal(t *testing.T) {
 	}
 
 	for sig1, sig2 := range signals {
-		if err = SetSignal(sig1, sig2); err != nil {
+		if err = SetSignalAction(sig1, sig2); err != nil {
 			t.Fatal(err)
 		}
 
@@ -69,12 +69,12 @@ func TestServer_SetSignal(t *testing.T) {
 
 	// invalid signal
 	expectedErr := fmt.Sprintf("invalid signal action: %v", -1)
-	if err = SetSignal(syscall.SIGINT, -1); err == nil || err.Error() != expectedErr {
+	if err = SetSignalAction(syscall.SIGINT, -1); err == nil || err.Error() != expectedErr {
 		t.Errorf("excepted error: %q, got %q", expectedErr, err)
 	}
 
 	expectedErr = fmt.Sprintf("the signal %s is not allow to custom", syscall.SIGTERM)
-	if err = SetSignal(syscall.SIGTERM, SigRestart); err == nil || err.Error() != expectedErr {
+	if err = SetSignalAction(syscall.SIGTERM, SigRestart); err == nil || err.Error() != expectedErr {
 		t.Errorf("excepted error: %q, got %q", expectedErr, err)
 	}
 }

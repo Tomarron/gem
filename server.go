@@ -99,10 +99,10 @@ func isSignalAction(sig SignalAction) bool {
 	return sig == SigIgnore || sig == SigRestart || sig == SigShutdown
 }
 
-// SetSignal set os.Signal's action(shutdown/restart/ignore).
+// SetSignalAction set os.Signal's action(shutdown/restart/ignore).
 //
 // Note: it is no allow to set syscall.SIGTERM.
-func SetSignal(sig os.Signal, action SignalAction) error {
+func SetSignalAction(sig os.Signal, action SignalAction) error {
 	if sig == syscall.SIGTERM {
 		return fmt.Errorf("the signal %s is not allow to custom", sig)
 	}
