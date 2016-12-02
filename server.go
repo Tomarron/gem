@@ -51,7 +51,7 @@ var (
 
 	servers map[string]*Server
 
-	signals map[os.Signal]Signal
+	signalActions map[os.Signal]SignalAction
 
 	isGracefulRestart bool
 
@@ -72,7 +72,7 @@ func init() {
 
 	servers = make(map[string]*Server)
 
-	signals = map[os.Signal]Signal{
+	signalActions = map[os.Signal]SignalAction{
 		syscall.SIGHUP:  SigRestart,
 		syscall.SIGTERM: SigShutdown,
 	}
@@ -86,36 +86,32 @@ func init() {
 }
 
 // Signal defines specific action to handle os.Signal.
-type Signal int8
+type SignalAction int8
 
-// Signals
+// Signal actions
 const (
 	SigIgnore = iota
 	SigRestart
 	SigShutdown
 )
 
-func isSignal(sig Signal) bool {
+func isSignalAction(sig SignalAction) bool {
 	return sig == SigIgnore || sig == SigRestart || sig == SigShutdown
 }
 
 // SetSignal set os.Signal's action(shutdown/restart/ignore).
 //
 // Note: it is no allow to set syscall.SIGTERM.
-func SetSignal(sig1 os.Signal, sig2 Signal) error {
-	if sig1 == syscall.SIGTERM {
-		return fmt.Errorf("the signal %s is not allow to custom", sig1)
+func SetSignal(sig os.Signal, action SignalAction) error {
+	if sig == syscall.SIGTERM {
+		return fmt.Errorf("the signal %s is not allow to custom", sig)
 	}
 
-	if !isSignal(sig2) {
-		return fmt.Errorf("invalid signal: %v", sig2)
+	if !isSignalAction(action) {
+		return fmt.Errorf("invalid signal action: %v", action)
 	}
 
-	if sig2 == SigIgnore {
-		delete(signals, sig1)
-	} else {
-		signals[sig1] = sig2
-	}
+	signalActions[sig] = action
 
 	return nil
 }
@@ -271,7 +267,7 @@ func (srv *Server) ListenAndServe() error {
 // handleSignals handle signals.
 func (srv *Server) handleSignals() {
 	var sig os.Signal
-	for sig = range signals {
+	for sig = range signalActions {
 		signal.Notify(srv.sigChan, sig)
 	}
 
@@ -279,7 +275,7 @@ func (srv *Server) handleSignals() {
 	for {
 		sig = <-srv.sigChan
 		log.Printf("[%d] received signal %q.\n", pid, sig)
-		switch signals[sig] {
+		switch signalActions[sig] {
 		case SigRestart:
 			err := fork()
 			if err != nil {
@@ -299,6 +295,8 @@ func (srv *Server) handleSignals() {
 			serversWg.Done()
 			shutdown()
 			return
+		case SigIgnore:
+			log.Printf("[%d] ignored signal %q.\n", pid, sig)
 		}
 	}
 }

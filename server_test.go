@@ -48,10 +48,10 @@ func TestServer_SetSessionsStoret(t *testing.T) {
 
 func TestServer_SetSignal(t *testing.T) {
 	var err error
-	var signals = map[os.Signal]Signal{
+	var signals = map[os.Signal]SignalAction{
 		syscall.SIGHUP:  SigRestart,
 		syscall.SIGUSR1: SigRestart,
-		syscall.SIGUSR2: SigShutdown,
+		syscall.SIGUSR2: SigIgnore,
 	}
 
 	for sig1, sig2 := range signals {
@@ -67,16 +67,8 @@ func TestServer_SetSignal(t *testing.T) {
 		}
 	}
 
-	// ignore syscall.SIGUSR2
-	if err = SetSignal(syscall.SIGUSR2, SigIgnore); err != nil {
-		t.Fatal(err)
-	}
-	if _, ok := signals[syscall.SIGUSR2]; !ok {
-		t.Error("failed to ignore signal")
-	}
-
 	// invalid signal
-	expectedErr := fmt.Sprintf("invalid signal: %v", -1)
+	expectedErr := fmt.Sprintf("invalid signal action: %v", -1)
 	if err = SetSignal(syscall.SIGINT, -1); err == nil || err.Error() != expectedErr {
 		t.Errorf("excepted error: %q, got %q", expectedErr, err)
 	}

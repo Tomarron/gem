@@ -15,9 +15,11 @@ go get github.com/go-gem/gem
 
 - [Graceful shutdown and restart](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart)
 - [Leveled logging](https://github.com/go-gem/gem/wiki/Logger)
+    - [Gem log](https://github.com/go-gem/log) - default.
+    - [logrus](https://github.com/sirupsen/logrus) - structured, pluggable logging package.
 - High-performance and pretty router, very friendly to RESTful APIs
 - Sessions support
-- Various Middlewares:
+- [Various Middlewares](https://github.com/go-gem/gem/wiki/Middleware)
     - JSON WEB TOKEN middleware
     - Compress middleware
     - Basic Auth middleware
@@ -37,7 +39,7 @@ go get github.com/go-gem/gem
 | CPU       | Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz 8 Cores|
 | Memory    | 8G                                               |
 
-The benchmark was tested at my laptop, I will send a pull request to 
+The benchmark comes from my laptop, I will send a pull request to 
 [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark) when the first stable version was released.
 
 ## Quick Start

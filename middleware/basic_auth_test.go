@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	tests.DefaultTimeout = 500 * time.Microsecond
+	tests.DefaultTimeout = time.Second
 }
 
 func TestBasicAuth(t *testing.T) {
