@@ -51,6 +51,8 @@ var (
 
 	servers map[string]*Server
 
+	serversListenerFd map[string]uintptr
+
 	signalActions map[os.Signal]SignalAction
 
 	isGracefulRestart bool
@@ -71,6 +73,8 @@ func init() {
 	serversWg = &sync.WaitGroup{}
 
 	servers = make(map[string]*Server)
+
+	serversListenerFd = make(map[string]uintptr, 0)
 
 	signalActions = map[os.Signal]SignalAction{
 		syscall.SIGHUP:  SigRestart,
@@ -151,6 +155,7 @@ func New(addr string, handler HandlerFunc) *Server {
 		},
 		wg:          &sync.WaitGroup{},
 		sigChan:     make(chan os.Signal),
+		stopChan:    make(chan bool),
 		logger:      defaultLogger,
 		waitTimeout: defaultWaitTimeout,
 	}
@@ -169,6 +174,8 @@ type Server struct {
 	listener      net.Listener
 	wg            *sync.WaitGroup
 	sigChan       chan os.Signal
+	stopChan      chan bool
+	stopped       bool
 	waitTimeout   time.Duration
 	logger        Logger
 	sessionsStore sessions.Store
@@ -217,7 +224,7 @@ func (srv *Server) initListener(config listenerConfig) (err error) {
 
 		// Kill parent process.
 		if len(servers) == len(serversAddr) {
-			syscall.Kill(os.Getppid(), syscall.SIGTERM)
+			err = syscall.Kill(os.Getppid(), syscall.SIGTERM)
 		}
 
 		return
@@ -247,7 +254,7 @@ func (srv *Server) initListener(config listenerConfig) (err error) {
 			return err
 		}
 	default:
-		err = fmt.Errorf("Unsupported server address: %s\n", srv.addr)
+		err = fmt.Errorf("unsupported server address: %s\n", srv.addr)
 	}
 
 	return
@@ -274,7 +281,7 @@ func (srv *Server) handleSignals() {
 	pid := syscall.Getpid()
 	for {
 		sig = <-srv.sigChan
-		log.Printf("[%d] received signal %q.\n", pid, sig)
+		log.Printf("[%d] server(%s) received signal %q.\n", pid, srv.addr, sig)
 		switch signalActions[sig] {
 		case SigRestart:
 			err := fork()
@@ -283,6 +290,9 @@ func (srv *Server) handleSignals() {
 			}
 			srv.stop()
 		case SigShutdown:
+			if !srv.stopped {
+				srv.stop()
+			}
 			log.Printf("[%d] shutting down the server(%s)...\n", pid, srv.addr)
 			if err := srv.wait(); err != nil {
 				log.Printf(
@@ -301,13 +311,44 @@ func (srv *Server) handleSignals() {
 	}
 }
 
+func (srv *Server) listenerFd() (uintptr, error) {
+	var f *os.File
+	var err error
+
+	switch srv.listener.(type) {
+	case *net.TCPListener:
+		f, err = srv.listener.(*net.TCPListener).File()
+	case *net.UnixListener:
+		f, err = srv.listener.(*net.UnixListener).File()
+	}
+
+	if err != nil {
+		return 0, err
+	}
+	return f.Fd(), err
+}
+
 func (srv *Server) serve() error {
+	mutex.Lock()
+	if fd, err := srv.listenerFd(); err != nil {
+		return err
+	} else {
+		serversListenerFd[srv.addr] = fd
+	}
+	mutex.Unlock()
+
 	for {
-		conn, err := srv.listener.Accept()
-		if err != nil {
-			return err
+		select {
+		case <-srv.stopChan:
+			return fmt.Errorf("[%d] server(%s) has been closed, refuse to serve any incoming connection.", syscall.Getpid(), srv.addr)
+		default:
+			conn, err := srv.listener.Accept()
+			if err != nil {
+				return err
+			}
+			go srv.ServeConn(conn)
 		}
-		go srv.ServeConn(conn)
+
 	}
 }
 
@@ -340,6 +381,10 @@ func (srv *Server) init(handler HandlerFunc) {
 func (srv *Server) stop() {
 	// Disable keep-alive of existing connections.
 	srv.server.DisableKeepalive = true
+	srv.stopped = true
+	go func() {
+		srv.stopChan <- true
+	}()
 }
 
 // wait wait a duration for existing connections to finish,
@@ -386,30 +431,31 @@ func fork() (err error) {
 	mutex.Unlock()
 
 	pid := syscall.Getpid()
-	log.Printf("[%d] Restarting...\n", pid)
+	log.Printf("[%d] restarting...\n", pid)
 
 	files := make([]uintptr, len(servers)+3)
 	files = append(files, os.Stdin.Fd(), os.Stdout.Fd(), os.Stderr.Fd())
-	var addrs = make([]string, 0)
-	for _, srv := range servers {
-		var f *os.File
-		switch srv.listener.(type) {
-		case *net.TCPListener:
-			f, _ = srv.listener.(*net.TCPListener).File()
-			files = append(files)
-		case *net.UnixListener:
-			f, _ = srv.listener.(*net.UnixListener).File()
-		}
-		files[len(addrs)+3] = f.Fd()
-		addrs = append(addrs, srv.addr)
+	var addrs = make([]string, len(serversListenerFd))
+	offset := 0
+	for addr, fd := range serversListenerFd {
+		files[offset+3] = fd
+		addrs[offset] = addr
+		offset++
 	}
 
-	env := append(
-		os.Environ(),
-		"GEM_GRACEFUL_RESTART=true",
-	)
-	if len(addrs) > 0 {
-		env = append(env, fmt.Sprintf(`GEM_SERVER_ADDRS=%s`, strings.Join(addrs, ",")))
+	env := os.Environ()
+
+	if isGracefulRestart {
+		for i := len(env) - 1; i >= 0; i-- {
+			if strings.Index(env[i], "GEM_SERVER_ADDRS=") == 0 {
+				env[i] = "GEM_SERVER_ADDRS=" + strings.Join(addrs, ",")
+			}
+		}
+	} else {
+		env = append(env,
+			"GEM_GRACEFUL_RESTART=true",
+			`GEM_SERVER_ADDRS=`+strings.Join(addrs, ","),
+		)
 	}
 
 	execSpec := &syscall.ProcAttr{
