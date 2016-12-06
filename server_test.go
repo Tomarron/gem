@@ -185,3 +185,33 @@ func TestServer_Other(t *testing.T) {
 		t.Errorf("expected server DisableKeepalive %v, got %v", true, srv.server.DisableKeepalive)
 	}
 }
+
+func TestInitEnv(t *testing.T) {
+	env := []string{}
+	addrs := []string{":8080", ":8081"}
+	isGracefulRestart = false
+
+	initEnv(&env, addrs)
+	if len(env) != 2 {
+		t.Fatalf("expected lenth of: %d, got %d", 2, len(env))
+	}
+	if env[0] != "GEM_GRACEFUL_RESTART=true" {
+		t.Errorf("expected env[0]: %s, got %s", "GEM_GRACEFUL_RESTART=true", env[0])
+	}
+	if env[1] != "GEM_SERVER_ADDRS=:8080,:8081" {
+		t.Errorf("expected env[0]: %s, got %s", "GEM_SERVER_ADDRS=:8080,:8081", env[1])
+	}
+
+	isGracefulRestart = true
+	initEnv(&env, []string{":8081", ":8080"})
+
+	if len(env) != 2 {
+		t.Fatalf("expected lenth of: %d, got %d", 2, len(env))
+	}
+	if env[0] != "GEM_GRACEFUL_RESTART=true" {
+		t.Errorf("expected env[0]: %s, got %s", "GEM_GRACEFUL_RESTART=true", env[0])
+	}
+	if env[1] != "GEM_SERVER_ADDRS=:8081,:8080" {
+		t.Errorf("expected env[0]: %s, got %s", "GEM_SERVER_ADDRS=:8081,:8080", env[1])
+	}
+}

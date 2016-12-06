@@ -142,8 +142,6 @@ func New(addr string, handler HandlerFunc) *Server {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	serversWg.Add(1)
-
 	if addr == "" {
 		addr = ":http"
 	}
@@ -330,7 +328,11 @@ func (srv *Server) listenerFd() (uintptr, error) {
 
 func (srv *Server) serve() error {
 	mutex.Lock()
+
+	serversWg.Add(1)
+
 	if fd, err := srv.listenerFd(); err != nil {
+		mutex.Unlock()
 		return err
 	} else {
 		serversListenerFd[srv.addr] = fd
@@ -340,7 +342,7 @@ func (srv *Server) serve() error {
 	for {
 		select {
 		case <-srv.stopChan:
-			return fmt.Errorf("[%d] server(%s) has been closed, refuse to serve any incoming connection.", syscall.Getpid(), srv.addr)
+			return fmt.Errorf("[%d] server(%s) has been closed, refuse to serve any incoming connections.", syscall.Getpid(), srv.addr)
 		default:
 			conn, err := srv.listener.Accept()
 			if err != nil {
@@ -445,18 +447,7 @@ func fork() (err error) {
 
 	env := os.Environ()
 
-	if isGracefulRestart {
-		for i := len(env) - 1; i >= 0; i-- {
-			if strings.Index(env[i], "GEM_SERVER_ADDRS=") == 0 {
-				env[i] = "GEM_SERVER_ADDRS=" + strings.Join(addrs, ",")
-			}
-		}
-	} else {
-		env = append(env,
-			"GEM_GRACEFUL_RESTART=true",
-			`GEM_SERVER_ADDRS=`+strings.Join(addrs, ","),
-		)
-	}
+	initEnv(&env, addrs)
 
 	execSpec := &syscall.ProcAttr{
 		Env:   env,
@@ -470,6 +461,22 @@ func fork() (err error) {
 	log.Printf("[%d] Fork-exec to %d.\n", pid, fork)
 
 	return
+}
+
+func initEnv(env *[]string, addrs []string) {
+	if isGracefulRestart {
+		for i := len(*env) - 1; i >= 0; i-- {
+			if strings.Index((*env)[i], "GEM_SERVER_ADDRS=") == 0 {
+				(*env)[i] = "GEM_SERVER_ADDRS=" + strings.Join(addrs, ",")
+				break
+			}
+		}
+	} else {
+		*env = append(*env,
+			"GEM_GRACEFUL_RESTART=true",
+			`GEM_SERVER_ADDRS=`+strings.Join(addrs, ","),
+		)
+	}
 }
 
 // ListenAndServe serves HTTP requests from the given TCP addr
