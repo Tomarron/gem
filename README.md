@@ -23,15 +23,13 @@ go get github.com/go-gem/gem
 - [High-performance](#performance) and pretty [router](https://github.com/go-gem/gem/wiki/Router), very friendly to REST APIs
 - [Sessions support](https://github.com/go-gem/gem/wiki/Sessions)
 - [Various Middlewares](https://github.com/go-gem/gem/wiki/Middleware)
-    | Middleware          | Document                                              | Example                                                 |
-    |:--------------------|:------------------------------------------------------|:--------------------------------------------------------|
-    | JSON Web Token      | [JSON Web Token](wiki/JSON-Web-Token)                 |                                                         |
-    | Compress            | https://github.com/go-gem/gem/wiki/Compress           |                                                         |
-    | Basic auth          | https://github.com/go-gem/gem/wiki/Basic-auth         |                                                         |
-    | Request body limit  | https://github.com/go-gem/gem/wiki/Request-body-limit |                                                         |
-    | CSRF                | https://github.com/go-gem/gem/wiki/CSRF               |                                                         | 
-    | CORS                | https://github.com/go-gem/gem/wiki/CORS               |                                                         |
-    | Sessions            | https://github.com/go-gem/gem/wiki/Sessions           | https://github.com/go-gem/examples/tree/master/session  |
+    - [JSON Web Token middleware](https://github.com/go-gem/gem/wiki/JSON-Web-Token)
+    - [Compress middleware](https://github.com/go-gem/gem/wiki/Compress)
+    - [Basic auth middleware](https://github.com/go-gem/gem/wiki/Basic-auth)
+    - [Request body limit middleware](https://github.com/go-gem/gem/wiki/Request-body-limit)
+    - [CSRF middleware](https://github.com/go-gem/gem/wiki/CSRF)
+    - [CORS middleware](https://github.com/go-gem/gem/wiki/CORS)
+    - [Sessions middleware](https://github.com/go-gem/gem/wiki/Sessions)
 - [Not bad scores of test coverage](https://coveralls.io/github/go-gem/gem?branch=master) - 85%～100% is acceptable.
 
 
