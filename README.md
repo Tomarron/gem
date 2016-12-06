@@ -1,6 +1,10 @@
 # Gem [![GoDoc](https://godoc.org/github.com/go-gem/gem?status.svg)](https://godoc.org/github.com/go-gem/gem) [![Build Status](https://travis-ci.org/go-gem/gem.svg?branch=master)](https://travis-ci.org/go-gem/gem) [![Go Report Card](https://goreportcard.com/badge/github.com/go-gem/gem)](https://goreportcard.com/report/github.com/go-gem/gem) [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master) [![Join the chat at https://gitter.im/go-gem/gem](https://badges.gitter.im/go-gem/gem.svg)](https://gitter.im/go-gem/gem?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Gem, a simple and fast web framework, it built top of [fasthttp](https://github.com/valyala/fasthttp).
+Gem, a simple and fast web framework written in Go(golang), it built on top of [fasthttp](https://github.com/valyala/fasthttp).
+
+Um, Gem is quite new package, so it's APIs is currently unstable until the `v1.0.0` being released,
+see [milestones](https://github.com/go-gem/gem/milestones) for details,
+and if you are interest in this project, you can star it, all of suggestions and PRs are welcome. 
 
 
 ## Install
@@ -14,17 +18,20 @@ go get github.com/go-gem/gem
 
 - [Graceful shutdown and restart](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart)
 - [Leveled logging](https://github.com/go-gem/gem/wiki/Logger)
-    - [Gem log](https://github.com/go-gem/log) - default.
-    - [logrus](https://github.com/sirupsen/logrus) - structured, pluggable logging package.
-- High-performance and pretty router, very friendly to RESTful APIs
-- Sessions support
+    - [Gem log](https://github.com/go-gem/log) - default logger.
+    - [logrus](https://github.com/sirupsen/logrus) - structured, pluggable logging package, compatible with Gem.
+- [High-performance](#performance) and pretty [router](https://github.com/go-gem/gem/wiki/Router), very friendly to REST APIs
+- [Sessions support](https://github.com/go-gem/gem/wiki/Sessions)
 - [Various Middlewares](https://github.com/go-gem/gem/wiki/Middleware)
-    - JSON WEB TOKEN middleware
-    - Compress middleware
-    - Basic Auth middleware
-    - Request Body Limit middleware
-    - CSRF middleware
-    - CORS middleware
+    | Middleware          | Document                                              | Example                                                 |
+    |:--------------------|:------------------------------------------------------|:--------------------------------------------------------|
+    | JSON Web Token      | [JSON Web Token](wiki/JSON-Web-Token)                 |                                                         |
+    | Compress            | https://github.com/go-gem/gem/wiki/Compress           |                                                         |
+    | Basic auth          | https://github.com/go-gem/gem/wiki/Basic-auth         |                                                         |
+    | Request body limit  | https://github.com/go-gem/gem/wiki/Request-body-limit |                                                         |
+    | CSRF                | https://github.com/go-gem/gem/wiki/CSRF               |                                                         | 
+    | CORS                | https://github.com/go-gem/gem/wiki/CORS               |                                                         |
+    | Sessions            | https://github.com/go-gem/gem/wiki/Sessions           | https://github.com/go-gem/examples/tree/master/session  |
 - [Not bad scores of test coverage](https://coveralls.io/github/go-gem/gem?branch=master) - 85%～100% is acceptable.
 
 
@@ -40,12 +47,13 @@ go get github.com/go-gem/gem
 | CPU       | Intel(R) Core(TM) i7-4720HQ CPU @ 2.60GHz 8 Cores|
 | Memory    | 8G                                               |
 
-The benchmark comes from my laptop, I have send a pull request to 
-[go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark),
-waiting for merging and rerunning the benchmark.
+The benchmark comes from my laptop, I have sent a pull request to [go-web-framework-benchmark](https://github.com/smallnest/go-web-framework-benchmark),
+waiting for rerunning the benchmark.
 
 
 ## Quick Start
+
+More usages can be found in [Wiki](#wiki).
 
 ```
 package main
@@ -63,16 +71,21 @@ func main() {
 }
 ```
 
-Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080).
+Run the code above, and then navigate to [localhost:8080](http://localhost:8080).
 
 
 ## [Wiki](https://github.com/go-gem/gem/wiki)
 
 - [Server](https://github.com/go-gem/gem/wiki/Server)
     - [Configuration](https://github.com/go-gem/gem/wiki/Server#configuration)
+    - [Listen multiple ports at single process](https://github.com/go-gem/gem/wiki/Listen-multiple-ports-at-single-process)
 - [Context](https://github.com/go-gem/gem/wiki/Context)
     - [Example](https://github.com/go-gem/examples/tree/master/context)
 - [Router](https://github.com/go-gem/gem/wiki/Router)
+    - [REST APIs](https://github.com/go-gem/gem/wiki/Router#rest-apis)
+    - [Serve static files](https://github.com/go-gem/gem/wiki/Router#static-files)
+    - [Parameter](https://github.com/go-gem/gem/wiki/Router#parameter)
+    - [Use middleware](https://github.com/go-gem/gem/wiki/Router#use-middleware)
     - [Example](https://github.com/go-gem/examples/tree/master/router)
 - [Logger](https://github.com/go-gem/gem/wiki/Logger)
     - [Custom logger](https://github.com/go-gem/gem/wiki/Logger#custom-logger)
@@ -91,6 +104,7 @@ Run the code above, and then navigate to [127.0.0.1:8080](http://127.0.0.1:8080)
 - [**Router**](https://github.com/go-gem/examples/tree/master/router)
 - [**Leveled logging**](https://github.com/go-gem/examples/tree/master/logger)
 - [**Graceful shutdown and restart**](https://github.com/go-gem/examples/tree/master/graceful)
+- [**Listen multiple ports at single process**](https://github.com/go-gem/examples/tree/master/multiport)
 
 
 ## Semantic Versioning
