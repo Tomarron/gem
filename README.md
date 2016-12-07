@@ -1,4 +1,4 @@
-# Gem [![GoDoc](https://godoc.org/github.com/go-gem/gem?status.svg)](https://godoc.org/github.com/go-gem/gem) [![Build Status](https://travis-ci.org/go-gem/gem.svg?branch=master)](https://travis-ci.org/go-gem/gem) [![Go Report Card](https://goreportcard.com/badge/github.com/go-gem/gem)](https://goreportcard.com/report/github.com/go-gem/gem) [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master) [![Join the chat at https://gitter.im/go-gem/gem](https://badges.gitter.im/go-gem/gem.svg)](https://gitter.im/go-gem/gem?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# Gem web framework [![Wiki](https://img.shields.io/badge/wiki-completed-green.svg?style=plastic)](https://github.com/go-gem/gem/wiki) [![GoDoc](https://godoc.org/github.com/go-gem/gem?status.svg)](https://godoc.org/github.com/go-gem/gem) [![Build Status](https://travis-ci.org/go-gem/gem.svg?branch=master)](https://travis-ci.org/go-gem/gem) [![Go Report Card](https://goreportcard.com/badge/github.com/go-gem/gem)](https://goreportcard.com/report/github.com/go-gem/gem) [![Coverage Status](https://coveralls.io/repos/github/go-gem/gem/badge.svg?branch=master)](https://coveralls.io/github/go-gem/gem?branch=master) [![Join the chat at https://gitter.im/go-gem/gem](https://badges.gitter.im/go-gem/gem.svg)](https://gitter.im/go-gem/gem?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Gem, a simple and fast web framework written in Go(golang), it built on top of [fasthttp](https://github.com/valyala/fasthttp).
 
@@ -23,13 +23,13 @@ go get github.com/go-gem/gem
 - [High-performance](#performance) and pretty [router](https://github.com/go-gem/gem/wiki/Router), very friendly to REST APIs
 - [Sessions support](https://github.com/go-gem/gem/wiki/Sessions)
 - [Various Middlewares](https://github.com/go-gem/gem/wiki/Middleware)
-    - [JSON Web Token middleware](https://github.com/go-gem/gem/wiki/JSON-Web-Token)
-    - [Compress middleware](https://github.com/go-gem/gem/wiki/Compress)
-    - [Basic auth middleware](https://github.com/go-gem/gem/wiki/Basic-auth)
-    - [Request body limit middleware](https://github.com/go-gem/gem/wiki/Request-body-limit)
-    - [CSRF middleware](https://github.com/go-gem/gem/wiki/CSRF)
-    - [CORS middleware](https://github.com/go-gem/gem/wiki/CORS)
-    - [Sessions middleware](https://github.com/go-gem/gem/wiki/Sessions)
+    - [JSON Web Token middleware](https://github.com/go-gem/gem/wiki/JSON-Web-Token-middleware)
+    - [Compress middleware](https://github.com/go-gem/gem/wiki/Compress-middleware)
+    - [Basic auth middleware](https://github.com/go-gem/gem/wiki/Basic-auth-middleware)
+    - [Request body limit middleware](https://github.com/go-gem/gem/wiki/Request-body-limit-middleware)
+    - [CSRF middleware](https://github.com/go-gem/gem/wiki/CSRF-middleware)
+    - [CORS middleware](https://github.com/go-gem/gem/wiki/CORS-middleware)
+    - [Sessions middleware](https://github.com/go-gem/gem/wiki/Sessions-middleware)
 - [Not bad scores of test coverage](https://coveralls.io/github/go-gem/gem?branch=master) - 85%～100% is acceptable.
 
 
@@ -51,7 +51,7 @@ waiting for rerunning the benchmark.
 
 ## Quick Start
 
-More usages can be found in [Wiki](#wiki).
+More usages may be obtained in [Wiki](#wiki).
 
 ```
 package main
@@ -63,46 +63,21 @@ import (
 )
 
 func main() {
-	log.Fatal(gem.ListenAndServe(":8080", func(ctx *gem.Context) {
+    router := gem.NewRouter()
+    router.GET("/", func(ctx *gem.Context) {
         ctx.HTML(200, "Hello world.")
-    }))
+    })
+
+	log.Fatal(gem.ListenAndServe(":8080", router.Handler()))
 }
 ```
 
 Run the code above, and then navigate to [localhost:8080](http://localhost:8080).
 
 
-## [Wiki](https://github.com/go-gem/gem/wiki)
-
-- [Server](https://github.com/go-gem/gem/wiki/Server)
-    - [Configuration](https://github.com/go-gem/gem/wiki/Server#configuration)
-    - [Listen multiple ports at single process](https://github.com/go-gem/gem/wiki/Listen-multiple-ports-at-single-process)
-- [Context](https://github.com/go-gem/gem/wiki/Context)
-    - [Example](https://github.com/go-gem/examples/tree/master/context)
-- [Router](https://github.com/go-gem/gem/wiki/Router)
-    - [REST APIs](https://github.com/go-gem/gem/wiki/Router#rest-apis)
-    - [Serve static files](https://github.com/go-gem/gem/wiki/Router#static-files)
-    - [Parameter](https://github.com/go-gem/gem/wiki/Router#parameter)
-    - [Use middleware](https://github.com/go-gem/gem/wiki/Router#use-middleware)
-    - [Example](https://github.com/go-gem/examples/tree/master/router)
-- [Logger](https://github.com/go-gem/gem/wiki/Logger)
-    - [Custom logger](https://github.com/go-gem/gem/wiki/Logger#custom-logger)
-    - [Example](https://github.com/go-gem/examples/tree/master/logger)
-- [Graceful shutdown and restart](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart)
-    - [Custom signal actions](https://github.com/go-gem/gem/wiki/Graceful-shutdown-and-restart#custom-signal-actions)
-    - [Example](https://github.com/go-gem/examples/tree/master/graceful)
-- [Middleware](https://github.com/go-gem/gem/wiki/Middleware)
-    - [How to write a middleware?](https://github.com/go-gem/gem/wiki/Middleware#how-to-write-a-middleware)
-    - [Share data between middlewares](https://github.com/go-gem/gem/wiki/Middleware#share-data-between-middlewares)
-
-
 ## [Examples](https://github.com/go-gem/examples)
 
-- [**Context**](https://github.com/go-gem/examples/tree/master/context)
-- [**Router**](https://github.com/go-gem/examples/tree/master/router)
-- [**Leveled logging**](https://github.com/go-gem/examples/tree/master/logger)
-- [**Graceful shutdown and restart**](https://github.com/go-gem/examples/tree/master/graceful)
-- [**Listen multiple ports at single process**](https://github.com/go-gem/examples/tree/master/multiport)
+Please refer to https://github.com/go-gem/examples
 
 
 ## Semantic Versioning
