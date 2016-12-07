@@ -2,6 +2,8 @@
 
 Gem, a simple and fast web framework written in Go(golang), it built on top of [fasthttp](https://github.com/valyala/fasthttp).
 
+**Note** it is currently not incompatible with `Windows`, see [#8](https://github.com/go-gem/gem/issues/8), apologize for the inconvenience.
+
 Um, Gem is quite new package, so it's APIs is currently unstable until the `v1.0.0` being released,
 see [milestones](https://github.com/go-gem/gem/milestones) for details,
 and if you are interest in this project, you can star it, all of suggestions and PRs are welcome. 
