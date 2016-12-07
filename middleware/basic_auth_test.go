@@ -58,7 +58,7 @@ func TestBasicAuth(t *testing.T) {
 
 	// Empty authorization.
 	test2 := tests.New(srv)
-	test2.Expect().Status(fasthttp.StatusUnauthorized)
+	test2.Expect().Status(fasthttp.StatusBadRequest).Body(fasthttp.StatusMessage(fasthttp.StatusBadRequest))
 	if err = test2.Run(); err != nil {
 		t.Error(err)
 	}
@@ -66,7 +66,7 @@ func TestBasicAuth(t *testing.T) {
 	// Invalid base64 encoded string.
 	test3 := tests.New(srv)
 	test3.Headers[gem.HeaderAuthorization] = "Basic invalidBase64EncodedString"
-	test3.Expect().Status(fasthttp.StatusUnauthorized)
+	test3.Expect().Status(fasthttp.StatusUnauthorized).Body(fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
 	if err = test3.Run(); err != nil {
 		t.Error(err)
 	}
@@ -74,7 +74,7 @@ func TestBasicAuth(t *testing.T) {
 	// Incorrect password.
 	test4 := tests.New(srv)
 	test4.Headers[gem.HeaderAuthorization] = fmt.Sprintf("%s %s", gem.HeaderBasic, incorrectEncodedStr)
-	test4.Expect().Status(fasthttp.StatusUnauthorized)
+	test4.Expect().Status(fasthttp.StatusUnauthorized).Body(fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
 	if err = test4.Run(); err != nil {
 		t.Error(err)
 	}

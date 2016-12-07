@@ -6,7 +6,6 @@ package middleware
 
 import (
 	"encoding/base64"
-	"errors"
 
 	"github.com/go-gem/gem"
 	"github.com/valyala/fasthttp"
@@ -14,11 +13,7 @@ import (
 
 // BasicAuth default configuration
 var (
-	BasicAuthOnValid   = func(ctx *gem.Context, _ string) {}
-	BasicAuthOnInvalid = func(ctx *gem.Context, _ error) {
-		// Sends 401 Unauthorized response.
-		ctx.Response.SetStatusCode(fasthttp.StatusUnauthorized)
-	}
+	BasicAuthOnValid = func(ctx *gem.Context, _ string) {}
 )
 
 // BasicAuth Basic Auth middleware
@@ -37,16 +32,6 @@ type BasicAuth struct {
 	//
 	// Optional.
 	OnValid func(ctx *gem.Context, username string)
-
-	// OnInvalid will be invoked on when error was occurred, such
-	// as empty authorization, invalid authorization, incorrect
-	// username or password.
-	//
-	// If you are care about the error message, you can
-	// print it by using ctx.Logger().
-	//
-	// Optional.
-	OnInvalid func(ctx *gem.Context, err error)
 }
 
 // NewBasicAuth returns BasicAuth instance by the
@@ -56,11 +41,8 @@ func NewBasicAuth(validator func(username, password string) bool) *BasicAuth {
 		Skipper:   defaultSkipper,
 		Validator: validator,
 		OnValid:   BasicAuthOnValid,
-		OnInvalid: BasicAuthOnInvalid,
 	}
 }
-
-var errEmptyBasicAuthAuthorization = errors.New("empty authorization")
 
 // Handle implements Middleware's Handle function.
 func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
@@ -78,14 +60,15 @@ func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
 		auth := gem.Bytes2String(ctx.RequestCtx.Request.Header.Peek(gem.HeaderAuthorization))
 
 		if auth == "" {
-			m.OnInvalid(ctx, errEmptyBasicAuthAuthorization)
+			ctx.HTML(fasthttp.StatusBadRequest, fasthttp.StatusMessage(fasthttp.StatusBadRequest))
 			return
 		}
 
 		if len(auth) > basicLen+1 && auth[:basicLen] == gem.HeaderBasic {
 			b, err := base64.StdEncoding.DecodeString(auth[basicLen+1:])
 			if err != nil {
-				m.OnInvalid(ctx, err)
+				ctx.Logger().Debugf("basic auth middleware: %s", err)
+				ctx.HTML(fasthttp.StatusUnauthorized, fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
 				return
 			}
 			cred := string(b)
@@ -103,6 +86,6 @@ func (m *BasicAuth) Handle(next gem.Handler) gem.Handler {
 			}
 		}
 
-		m.OnInvalid(ctx, nil)
+		ctx.HTML(fasthttp.StatusUnauthorized, fasthttp.StatusMessage(fasthttp.StatusUnauthorized))
 	})
 }
