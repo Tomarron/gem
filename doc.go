@@ -239,7 +239,7 @@ Context provides two useful methods: `SetUserValue` and `UserValue` to share dat
 	// Store data into context in one middleware
 	ctx.SetUserValue("name", "foo")
 
-	// Get data from context in other middleware or hander
+	// Get data from context in other middleware or handler
 	ctx.UserValue("name")
 */
 package gem

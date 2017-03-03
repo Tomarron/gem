@@ -197,8 +197,8 @@ router.ServeFiles("/images/*filepath", http.Dir(imagesDir))
 
 It is easy to implement a middleware, see [Middleware](https://godoc.org/github.com/go-gem/gem#Middleware) interface,
 you just need to implement the `Wrap` function.
-go
-```
+
+```go
 type Middleware interface {
     Wrap(next Handler) Handler
 }
@@ -248,7 +248,7 @@ Context provides two useful methods: `SetUserValue` and `UserValue` to share dat
 // Store data into context in one middleware
 ctx.SetUserValue("name", "foo")
 
-// Get data from context in other middleware or hander
+// Get data from context in other middleware or handler
 ctx.UserValue("name")
 ```
 
