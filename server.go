@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-const version = "2.0.0"
+const version = "2.1.0"
 
 // Version return version number.
 func Version() string {
