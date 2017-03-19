@@ -10,6 +10,8 @@ Gem is an easy to use and high performance web framework written in Go(golang), 
 and provides leveled logger and frequently used middlewares. 
 > **Note**: requires `go1.8` or above.
 
+[Starter Kit](https://github.com/go-gem/StarterKit) is available, it provides a convenient way to create an application.
+
 
 ## Features
 
